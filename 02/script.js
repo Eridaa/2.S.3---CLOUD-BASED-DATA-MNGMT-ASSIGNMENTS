@@ -6,14 +6,25 @@ import { Rhino3dmLoader } from 'https://cdn.jsdelivr.net/npm/three@0.124.0/examp
 let camera, scene, raycaster, renderer
 const mouse = new THREE.Vector2()
 window.addEventListener( 'click', onClick, false);
-window.addEventListener( 'resize',() => {
+/*window.addEventListener( 'resize',() => {
                         renderer.setSize(window.innerWidth,window.innerHeight);
                         camera.aspect = window.innerWidth/window.innerHeight;
                         camera.updateProjectionMatrix;
-})
+})*/
 
 const model = 'covid.3dm'
+let count = 20
 var material = new THREE.MeshLambertMaterial({color:'#741919'})
+let materialArray = []
+
+for (let i=0; i<count; i++){
+    materialArray[i]=material
+}
+
+
+let covidArray =[]
+
+
 
 init()
 animate()
@@ -25,7 +36,7 @@ function init() {
     // create a scene and a camera
     scene = new THREE.Scene()
     scene.background = new THREE.Color('#3b1111')
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 )
+    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 10000 )
     camera.position.y = - 100
 
     // create the renderer and add it to the html
@@ -53,33 +64,57 @@ function init() {
     const loader = new Rhino3dmLoader()
     loader.setLibraryPath( 'https://cdn.jsdelivr.net/npm/rhino3dm@0.13.0/' )
 
-   
-    //for(let i=0; i<10;i++){
+    
+    
     loader.load( model, function ( object ) {
 
-        document.getElementById('loader').remove()
-        document.getElementById('intro').remove()
+       document.getElementById('loader').remove()
+       document.getElementById('intro').remove()
 
-        object.traverse( function (child) { 
+       /* object.traverse( function (child) { 
             if (child.isMesh) {
                 child.material = material
-                child.position.set(0,10,0)
-      
             }
-        }, false)
+        }, false)*/
+
+        
+
+        for (let i=0; i<count;i++){
+
+            covidArray [i] = object.clone();
+            covidArray [i].position.x= (Math.random()-0.5) *500;
+            covidArray [i].position.y= (Math.random()-0.5) *500;
+            covidArray [i].position.z= (Math.random()-0.5) *500;
+
+            
+
+            object.traverse( function (child) { 
+                if (child.isMesh) {
+                   child.material = materialArray[0]
+                }
+            }, false)
 
 
-        scene.add( object )
-        //console.log( object )
+            scene.add( covidArray [i] )
+            //console.log( object )
 
-    } )
-    //}
+        
 
+           const animateGeometry = () => {
+                requestAnimationFrame (animateGeometry)
+                covidArray [i].rotation.y += 0.01
+                covidArray[i].position.y +=1
 
-    
+                renderer.render( scene, camera )
+            }
+            animateGeometry()
+            /*return object;*/
+        }
+
+    } )  
 }
-
-    function onClick( event ) {
+    console.log(covidArray)
+    function onClick(event) {
 
     console.log( `click! (${event.clientX}, ${event.clientY})`)
 
@@ -92,33 +127,18 @@ function init() {
     raycaster.setFromCamera( mouse, camera )
 
 	// calculate objects intersecting the picking ray
-    const intersects = raycaster.intersectObjects( scene.children, true )
+    
+    var intersects = raycaster.intersectObjects( covidArray, true )
+   
+    console.log(intersects[0].object);
+
 
     for (let i=0; i< intersects.length;i++){
 
-      intersects [i].object.material.color.set("#3d3d3d")  
+      intersects [0].object.material.color.set("#3d3d3d")  
     }
 
-    /*if (container) container.remove()
-
-    // reset object colours
-    scene.traverse((child, i) => {
-        if (child.isMesh) {
-            child.material.color.set( 'white' )
-        }
-    });
-
-    if (intersects.length > 0) {
-
-        // get closest object
-        const object = intersects[0].object
-        console.log(object) // debug
-
-        object.material.color.set( 'yellow' )
-
-    
-        
-    }*/
+  
 
 }
 
